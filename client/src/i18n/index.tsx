@@ -13,21 +13,32 @@ const LanguageContext = createContext<LanguageContextType>({
   t: translations.ru,
 });
 
+function safeGetStorage(key: string): string | null {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function safeSetStorage(key: string, value: string): void {
+  try { localStorage.setItem(key, value); } catch { /* Safari private mode */ }
+}
+
 function detectLocale(): Locale {
-  const saved = localStorage.getItem("algo-lang");
+  const saved = safeGetStorage("algo-lang");
   if (saved && ["ru", "en", "uz"].includes(saved)) return saved as Locale;
-  const nav = navigator.language.slice(0, 2).toLowerCase();
-  if (nav === "uz") return "uz";
-  if (nav === "en") return "en";
+  try {
+    const nav = navigator.language.slice(0, 2).toLowerCase();
+    if (nav === "uz") return "uz";
+    if (nav === "en") return "en";
+  } catch { /* ignore */ }
   return "ru";
 }
+
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(detectLocale);
 
   const setLocale = (l: Locale) => {
     setLocaleState(l);
-    localStorage.setItem("algo-lang", l);
+    safeSetStorage("algo-lang", l);
   };
 
   useEffect(() => {
