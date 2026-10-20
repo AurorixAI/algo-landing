@@ -1,52 +1,37 @@
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Check, ChevronDown, Globe2 } from "lucide-react";
 import { useTranslation, type Locale } from "@/i18n";
-import { Globe } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import "./language-switcher.css";
 
-const flags: Record<Locale, string> = { uz: "🇺🇿", ru: "🇷🇺", en: "🇬🇧" };
-const labels: Record<Locale, string> = { uz: "O'zbekcha", ru: "Русский", en: "English" };
+const languages: { locale: Locale; name: string; code: string }[] = [
+  { locale: "ru", name: "Русский", code: "RU" },
+  { locale: "uz", name: "O‘zbekcha", code: "UZ" },
+  { locale: "en", name: "English", code: "EN" },
+];
 
-export function LanguageSwitcher() {
+export default function LanguageSwitcher() {
   const { locale, setLocale } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const label = { ru: "Язык сайта", uz: "Sayt tili", en: "Website language" }[locale];
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-slate-500 transition-all hover:text-slate-900 hover:bg-slate-100"
-        aria-label="Change language"
-      >
-        <Globe className="h-4 w-4" />
-        <span className="hidden sm:inline">{flags[locale]}</span>
+  return <DropdownMenu.Root modal={false}>
+    <DropdownMenu.Trigger asChild>
+      <button className="language-trigger" type="button" aria-label={`${label}: ${locale.toUpperCase()}`}>
+        <Globe2 className="language-globe" size={16} aria-hidden="true" />
+        <span>{locale.toUpperCase()}</span>
+        <ChevronDown className="language-chevron" size={12} aria-hidden="true" />
       </button>
-
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-40 rounded-xl border border-slate-200 bg-white py-1 shadow-xl z-50">
-          {(["uz", "ru", "en"] as Locale[]).map((l) => (
-            <button
-              key={l}
-              onClick={() => { setLocale(l); setOpen(false); }}
-              className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors ${
-                locale === l
-                  ? "bg-blue-50 text-blue-700 font-bold"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-              }`}
-            >
-              <span className="text-base">{flags[l]}</span>
-              {labels[l]}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+    </DropdownMenu.Trigger>
+    <DropdownMenu.Portal>
+      <DropdownMenu.Content className="language-menu" align="end" sideOffset={10} collisionPadding={12}>
+        <DropdownMenu.Label className="language-menu-label">{label}</DropdownMenu.Label>
+        <DropdownMenu.RadioGroup value={locale} aria-label={label} onValueChange={value => setLocale(value as Locale)}>
+          {languages.map(language => <DropdownMenu.RadioItem key={language.locale} className="language-option" value={language.locale} textValue={language.name}>
+            <span className="language-option-check" aria-hidden="true"><DropdownMenu.ItemIndicator><Check size={14} strokeWidth={2.4} /></DropdownMenu.ItemIndicator></span>
+            <span className="language-option-name" lang={language.locale}>{language.name}</span>
+            <span className="language-option-code" aria-hidden="true">{language.code}</span>
+          </DropdownMenu.RadioItem>)}
+        </DropdownMenu.RadioGroup>
+      </DropdownMenu.Content>
+    </DropdownMenu.Portal>
+  </DropdownMenu.Root>;
 }

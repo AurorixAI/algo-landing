@@ -1,0 +1,96 @@
+.atmosphere-section {
+  position:relative;
+  isolation:isolate;
+  overflow:clip;
+}
+.atmosphere-section>.shell { position:relative; z-index:1; }
+.atmosphere-section .section-heading p,
+.atmosphere-section .module-content p,
+.atmosphere-section .detail-item p { color:#5f6d84; }
+.atmosphere-section.platform-section { background:#f7f9fe; padding-top:112px; padding-bottom:100px; }
+.atmosphere-section .module-grid { gap:24px; }
+.atmosphere-section .module-card { background:#fffffff5; border-color:#dce4f2; border-radius:18px; box-shadow:0 8px 35px #1d3d7906; }
+.atmosphere-section .module-card:hover { border-color:#a9bff0; box-shadow:0 20px 48px #1d3d7910; }
+.atmosphere-section .module-topline { padding-top:24px; }
+.atmosphere-section .module-content { background:white; padding-bottom:29px; }
+.atmosphere-section .module-tags span { color:#63718a; background:#f3f6fc; border-color:#e8edf6; }
+.atmosphere-section .module-art { height:230px; }
+.atmosphere-section .section-bottomline>span,
+.atmosphere-section .section-bottomline>a { color:#61718d; }
+
+.atmosphere-section.journey-section { background:#edf3ff; padding-top:100px; padding-bottom:112px; border-top:1px solid #e2e9f7; }
+.atmosphere-section.journey-section .section-kicker { color:#255ad8; }
+.atmosphere-section.journey-section h2 em { color:#687eaa; }
+.atmosphere-section .journey-demo { border-color:#d9e3f3; border-radius:18px; box-shadow:0 24px 60px #2e4d8510; }
+.atmosphere-section .journey-demo-top { background:#f9fbff; border-bottom-color:#e8eef8; }
+.atmosphere-section .journey-demo-top>.mono { color:#61718a; }
+.atmosphere-section .journey-step:not(.active) .step-description { color:#62728d; }
+.atmosphere-section .journey-step:not(.active) { color:#60708b; }
+
+.atmosphere-section.team-section { background:#10203d; padding-top:100px; padding-bottom:108px; }
+.atmosphere-section.team-section .section-kicker { color:#a8c1ff; }
+.atmosphere-section.team-section h2 em { color:#b8cfff; }
+.atmosphere-section .team-intro,
+.atmosphere-section .role-copy p { color:#cad7ee; }
+.atmosphere-section .role-tabs button { color:#b8cbe9; }
+.atmosphere-section .role-tabs button[aria-pressed="true"] { color:white; }
+.atmosphere-section .role-tabs { border-bottom-color:#91b0e62e; }
+.atmosphere-section .role-tab-indicator { background:#a4c3ff; }
+.atmosphere-section .role-copy li { color:#e0eaff; }
+.atmosphere-section .role-copy li svg { color:#a7c5ff; }
+.atmosphere-section .role-card { transform:rotate(0); border-radius:16px; border-color:#dbe6fa; box-shadow:0 28px 80px #030e253d; }
+.atmosphere-section .role-card-top { padding-top:23px; padding-bottom:23px; }
+.atmosphere-section .role-card-bottom { border-radius:0 0 16px 16px; }
+
+.atmosphere-section.details-section { background:#fbfcff; padding-top:112px; padding-bottom:108px; }
+.atmosphere-section .detail-grid { border-top-color:#dce5f2; }
+.atmosphere-section .detail-item { padding-top:31px; }
+.atmosphere-section .detail-item+.detail-item { border-left-color:#dfe6f2; }
+.atmosphere-section .detail-icon { display:inline-grid; place-items:center; width:43px; height:43px; margin-bottom:29px; border:1px solid #dce6f6; border-radius:12px; background:#f0f5ff; color:#5578bd; }
+.atmosphere-section .detail-icon svg { width:21px; height:21px; stroke-width:1.45; }
+.atmosphere-section .detail-number { color:#6b7d9b; top:38px; }
+
+.atmosphere-section.closing-section { background:#10203d; padding-top:100px; padding-bottom:96px; }
+.atmosphere-section.closing-section .section-kicker { color:#b1c6ec; }
+.atmosphere-section.closing-section .status-dot { background:#a7c5ff; }
+.atmosphere-section.closing-section h2 em { color:#b5ceff; }
+.atmosphere-section.closing-section p { color:#c5d3e9; max-width:415px; font-size:15px; }
+.atmosphere-section .closing-note { color:#adbedb; }
+.site-footer { border-top:1px solid #dce4f0; }
+.hero .product-caption { color:#65748e; }
+.hero .product-caption>span:first-child { color:#5f6f89; }
+
+@media(min-width:641px) {
+  .atmosphere-section .journey-step { padding-left:14px; padding-right:14px; }
+  .atmosphere-section .journey-step.active { background:#ffffff85; border-radius:0 0 10px 10px; }
+}
+@media(max-width:900px) {
+  .atmosphere-section.platform-section,.atmosphere-section.journey-section,.atmosphere-section.details-section { padding-top:82px; padding-bottom:86px; }
+  .atmosphere-section.team-section { padding-top:80px; padding-bottom:85px; }
+  .atmosphere-section .module-grid { gap:14px; }
+  .atmosphere-section .module-art { height:190px; }
+  .atmosphere-section.closing-section { padding-top:84px; padding-bottom:80px; }
+}
+@media(max-width:640px) {
+  .site-header .header-actions { gap:10px; }
+  .atmosphere-section.platform-section,.atmosphere-section.journey-section,.atmosphere-section.details-section { padding-top:64px; padding-bottom:68px; }
+  .atmosphere-section .module-grid { gap:20px; }
+  .atmosphere-section .module-art { height:230px; }
+  .atmosphere-section .module-topline { padding-top:20px; }
+  .atmosphere-section .module-content { padding:24px; }
+  .atmosphere-section .journey-step.active { background:#f5f8ff; }
+  .atmosphere-section .journey-demo { border-radius:14px; }
+  .atmosphere-section.team-section { padding-top:66px; padding-bottom:70px; }
+  .atmosphere-section .role-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+  .atmosphere-section .role-tabs button { flex-direction:column; justify-content:center; gap:8px; min-width:0; text-align:center; line-height:1.4; }
+  .atmosphere-section .role-card { margin:5px 0 0; }
+  .atmosphere-section .role-card-top { padding:19px; }
+  .atmosphere-section .detail-item { padding-top:24px; }
+  .atmosphere-section .detail-icon { width:37px; height:37px; margin-bottom:22px; border-radius:10px; }
+  .atmosphere-section .detail-number { top:31px; }
+  .atmosphere-section.closing-section { padding-top:70px; padding-bottom:74px; }
+  .atmosphere-section.closing-section p { font-size:14px; }
+}
+@media(max-width:360px) {
+  .atmosphere-section .role-tabs button { font-size:9px; }
+}

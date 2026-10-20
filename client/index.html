@@ -3,30 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
-    <meta name="description" content="ALGO — интеллектуальная SaaS-платформа для учебных центров. AI-диагностика учеников, генерация экзаменов, аналитика на базе авторского графа навыков." />
+    <meta name="description" content="ALGO объединяет диагностику по математике, занятия, экзамены, посещаемость и финансы учебного центра. Познакомьтесь с платформой на демо." />
     <meta name="theme-color" content="#2563eb" />
     <link rel="canonical" href="https://algo-landing.netlify.app/" />
 
-    <meta property="og:title" content="ALGO — Умная математика. Платформа нового поколения." />
-    <meta property="og:description" content="AI-платформа, которая находит скрытые пробелы в знаниях и строит идеальный маршрут обучения. Для учебных центров и школ." />
+    <meta property="og:title" content="ALGO — Сильный центр. Сильные ученики." />
+    <meta property="og:description" content="Диагностика, занятия, экзамены и финансы — всё складывается в ALGO. Единая платформа для учебного центра." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://algo-landing.netlify.app/" />
-    <meta property="og:image" content="/opengraph.jpg" />
+    <meta property="og:image" content="/opengraph.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="ru_RU" />
     <meta property="og:locale:alternate" content="en_US" />
     <meta property="og:locale:alternate" content="uz_UZ" />
     <meta property="og:site_name" content="ALGO EdTech" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ALGO — Умная математика." />
-    <meta name="twitter:description" content="AI-платформа для учебных центров: диагностика, экзамены, аналитика." />
-    <meta name="twitter:image" content="/opengraph.jpg" />
+    <meta name="twitter:title" content="ALGO — Сильный центр. Сильные ученики." />
+    <meta name="twitter:description" content="Диагностика, занятия, экзамены и финансы учебного центра в одной системе." />
+    <meta name="twitter:image" content="/opengraph.png" />
 
-    <title>ALGO — Умная математика.</title>
+    <title>ALGO — Сильный центр. Сильные ученики.</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="preload" href="/fonts/inter-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
 
     <script type="application/ld+json">
     {
@@ -35,81 +36,16 @@
       "name": "ALGO EdTech",
       "url": "https://algo-landing.netlify.app",
       "logo": "https://algo-landing.netlify.app/favicon.svg",
-      "description": "Интеллектуальная SaaS-платформа для учебных центров с AI-ядром для математики.",
-      "foundingDate": "2026",
+      "description": "Единая платформа для учебного центра: диагностика по математике, занятия, экзамены, посещаемость, оплаты и расчёт преподавателей.",
       "sameAs": []
     }
     </script>
 
-    <style>
-      #app-loader{
-        position:fixed;inset:0;
-        display:flex;flex-direction:column;
-        align-items:center;justify-content:center;
-        background:#f8fafc;
-        z-index:9999;
-        transition:opacity 0.3s ease;
-      }
-      #app-loader.fade-out{opacity:0;pointer-events:none}
-      .loader-logo{
-        width:56px;height:56px;
-        background:#2563eb;
-        border-radius:16px;
-        display:flex;align-items:center;justify-content:center;
-        margin-bottom:20px;
-        box-shadow:0 8px 32px rgba(37,99,235,0.3);
-      }
-      .loader-logo span{
-        font-size:26px;color:#fff;
-        font-family:Georgia,serif;font-style:italic;
-      }
-      .loader-brand{
-        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-        font-size:20px;font-weight:800;
-        color:#1e293b;letter-spacing:-0.03em;
-        margin-bottom:28px;
-      }
-      .loader-bar{
-        width:140px;height:3px;
-        background:#e2e8f0;border-radius:99px;overflow:hidden;
-      }
-      .loader-fill{
-        height:100%;width:0%;
-        background:linear-gradient(90deg,#2563eb,#6366f1);
-        border-radius:99px;
-        animation:lp 1.4s ease-in-out forwards;
-      }
-      @keyframes lp{
-        0%{width:0%}
-        50%{width:70%}
-        100%{width:95%}
-      }
-    </style>
   </head>
   <body>
-    <div id="app-loader">
-      <div class="loader-logo"><span>∫</span></div>
-      <div class="loader-brand">ALGO</div>
-      <div class="loader-bar"><div class="loader-fill"></div></div>
-    </div>
-
     <div id="root"></div>
+    <noscript><p>ALGO — диагностика, занятия и управление учебным центром. Для просмотра интерактивной платформы включите JavaScript. <a href="https://algolab.me/login">Войти в ALGO</a></p></noscript>
     <script type="module" src="/src/main.tsx"></script>
 
-    <script>
-      (function(){
-        var loader = document.getElementById('app-loader');
-        var root = document.getElementById('root');
-        if(!loader || !root) return;
-        var obs = new MutationObserver(function(){
-          if(root.children.length > 0){
-            loader.classList.add('fade-out');
-            setTimeout(function(){ loader.style.display='none'; }, 350);
-            obs.disconnect();
-          }
-        });
-        obs.observe(root, {childList:true});
-      })();
-    </script>
   </body>
 </html>

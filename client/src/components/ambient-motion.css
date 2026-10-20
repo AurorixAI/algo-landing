@@ -1,0 +1,21 @@
+.ambient-motion-header-toggle {
+  display:grid;
+  place-items:center;
+  flex-shrink:0;
+  width:38px;
+  height:38px;
+  padding:0;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  color:#64748b;
+  transition:background .18s,border-color .18s,color .18s;
+}
+.ambient-motion-header-toggle:hover {
+  border-color:#dbe4f2;
+  background:#eef3fc;
+  color:#2563eb;
+}
+@media(prefers-reduced-motion:reduce) {
+  .ambient-motion-header-toggle { transition:none; }
+}

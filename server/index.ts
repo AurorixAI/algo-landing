@@ -2,25 +2,21 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { securityHeaders } from "../shared/security-headers";
+import { isKnownAIBot } from "../shared/bot-policy";
 
 const app = express();
 const httpServer = createServer(app);
-
-declare module "http" {
-  interface IncomingMessage {
-    rawBody: unknown;
+app.disable("x-powered-by");
+app.set("trust proxy", false);
+app.use((req, res, next) => {
+  res.set(securityHeaders(process.env.NODE_ENV === "production"));
+  // Keep the policy readable; deny declared AI clients on all other routes.
+  if (req.path !== "/robots.txt" && isKnownAIBot(req.get("user-agent") || "")) {
+    return res.status(403).set({ "Cache-Control": "no-store", Vary: "User-Agent" }).type("text/plain").send("Automated AI access is not permitted.");
   }
-}
-
-app.use(
-  express.json({
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
-  }),
-);
-
-app.use(express.urlencoded({ extended: false }));
+  next();
+});
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -36,23 +32,10 @@ export function log(message: string, source = "express") {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
   res.on("finish", () => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      log(logLine);
+      log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
     }
   });
 
@@ -63,16 +46,16 @@ app.use((req, res, next) => {
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    console.error("Internal Server Error:", err);
+    const suppliedStatus = Number(err.status || err.statusCode);
+    const status = [400, 413, 415].includes(suppliedStatus) ? suppliedStatus : 500;
+    // Parser/provider errors may contain the submitted body. Log only a safe status.
+    console.error(`[express] Request failed (${status})`);
 
     if (res.headersSent) {
       return next(err);
     }
 
-    return res.status(status).json({ message });
+    return res.status(status).set("Cache-Control", "no-store").json({ error: status === 413 ? "payload_too_large" : "invalid_request" });
   });
 
   // importantly only setup vite in development and after

@@ -25,9 +25,11 @@ function detectLocale(): Locale {
   const saved = safeGetStorage("algo-lang");
   if (saved && ["ru", "en", "uz"].includes(saved)) return saved as Locale;
   try {
-    const nav = navigator.language.slice(0, 2).toLowerCase();
-    if (nav === "uz") return "uz";
-    if (nav === "en") return "en";
+    const preferred = navigator.languages?.length ? navigator.languages : [navigator.language];
+    for (const language of preferred) {
+      const candidate = language.split(/[-_]/)[0].toLowerCase();
+      if (candidate === "ru" || candidate === "en" || candidate === "uz") return candidate;
+    }
   } catch { /* ignore */ }
   return "ru";
 }

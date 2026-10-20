@@ -1,0 +1,96 @@
+.section-atmosphere {
+  --atmosphere-play-state: paused;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  contain: paint;
+}
+
+.section-atmosphere[data-running="true"] { --atmosphere-play-state: running; }
+.section-atmosphere-svg { display: block; width: 100%; height: 100%; }
+.section-atmosphere::after { content: ""; position: absolute; inset: 0; }
+
+/* The light scenes keep their clearest area inside the reading column. */
+.section-atmosphere-atlas::after {
+  background: linear-gradient(90deg, transparent 0%, rgb(251 252 255 / .68) 19%, #fbfcff 34%, #fbfcff 66%, rgb(251 252 255 / .68) 81%, transparent 100%);
+}
+.section-atmosphere-path::after {
+  background: linear-gradient(180deg, #fbfcff 0%, rgb(251 252 255 / .86) 15%, rgb(251 252 255 / .43) 44%, transparent 100%);
+}
+.section-atmosphere-paper { background: linear-gradient(180deg, #fbfcff, #f7f9fe); }
+.section-atmosphere-paper::after {
+  background: linear-gradient(90deg, transparent 0%, rgb(249 251 255 / .82) 15%, #f9fbff 29%, #f9fbff 64%, rgb(249 251 255 / .45) 80%, transparent 100%);
+}
+
+.atmosphere-drift-left { animation: atmosphere-left-drift 24s ease-in-out infinite alternate; }
+.atmosphere-drift-right { animation: atmosphere-right-drift 29s ease-in-out infinite alternate; }
+.atmosphere-signal { stroke-dasharray: .045 .955; stroke-dashoffset: .05; animation: atmosphere-signal-travel 19s linear infinite; }
+.atmosphere-signal-late { animation-delay: -9s; animation-duration: 24s; }
+.atmosphere-route-signal { stroke-dasharray: .07 .93; animation-duration: 22s; }
+.atmosphere-signal-0 { animation-delay: -4s; }
+.atmosphere-signal-2 { animation-delay: -12s; }
+.atmosphere-signal-4 { animation-delay: -18s; }
+.atmosphere-route-field { animation: atmosphere-route-drift 26s ease-in-out infinite alternate; }
+
+.section-atmosphere-orbit { background: linear-gradient(115deg, #152b58 3%, #1a3e91 65%, #214fba 100%); }
+.atmosphere-orbit-svg { position: absolute; width: 1440px; height: 900px; top: 50%; right: -80px; transform: translateY(-50%); }
+.section-atmosphere-orbit::after {
+  background: linear-gradient(90deg, rgb(18 39 81 / .77), rgb(21 45 94 / .65) 24%, rgb(24 54 123 / .1) 63%, transparent);
+}
+.atmosphere-orbital-mesh { transform-origin: 1055px 450px; animation: atmosphere-sphere-breathe 30s ease-in-out infinite alternate; }
+.atmosphere-orbit-ring { transform-origin: 1020px 455px; animation: atmosphere-ring-drift 34s ease-in-out infinite alternate; }
+.atmosphere-orbit-signal { animation-duration: 26s; stroke-dasharray: .045 .955; }
+.atmosphere-paper-stack { transform-origin: 1285px 440px; animation: atmosphere-paper-drift 32s ease-in-out infinite alternate; }
+.atmosphere-paper-rule { animation: atmosphere-rule-drift 28s ease-in-out infinite alternate; }
+
+.section-atmosphere-converge { background: linear-gradient(115deg, #111e36 3%, #162d56 62%, #234782 100%); }
+.section-atmosphere-converge::after {
+  background: linear-gradient(90deg, #111e36 0%, rgb(17 30 54 / .94) 28%, rgb(17 30 54 / .36) 58%, transparent 82%);
+}
+.atmosphere-fold-field { transform-origin: 1050px 500px; animation: atmosphere-fold-breathe 25s ease-in-out infinite alternate; }
+.atmosphere-converge-signal { animation-direction: reverse; animation-duration: 24s; animation-delay: -8s; }
+
+.section-atmosphere [class*="atmosphere-"] { animation-play-state: var(--atmosphere-play-state); }
+
+@keyframes atmosphere-left-drift { from { transform: translate(-7px, -9px); } to { transform: translate(11px, 13px); } }
+@keyframes atmosphere-right-drift { from { transform: translate(1440px, 880px) rotate(180deg) translate(-10px, -8px); } to { transform: translate(1440px, 880px) rotate(180deg) translate(10px, 11px); } }
+@keyframes atmosphere-signal-travel { from { stroke-dashoffset: .05; } to { stroke-dashoffset: -1.95; } }
+@keyframes atmosphere-route-drift { from { transform: translate(0, 0); } to { transform: translate(-11px, 10px); } }
+@keyframes atmosphere-sphere-breathe { from { transform: rotate(-1.8deg) scale(.985); } to { transform: rotate(1.8deg) scale(1.018); } }
+@keyframes atmosphere-ring-drift { from { transform: rotate(-1.7deg) translateY(-6px); } to { transform: rotate(1.7deg) translateY(6px); } }
+@keyframes atmosphere-paper-drift { from { transform: rotate(12deg) translateY(-5px); } to { transform: rotate(14deg) translateY(7px); } }
+@keyframes atmosphere-rule-drift { from { transform: translateY(-6px); } to { transform: translateY(8px); } }
+@keyframes atmosphere-fold-breathe { from { transform: rotate(-1deg) scale(.99); } to { transform: rotate(1deg) scale(1.025); } }
+
+@media (min-width: 1800px) {
+  .atmosphere-atlas-svg, .atmosphere-paper-svg { opacity: .88; }
+}
+
+@media (max-width: 900px) {
+  .section-atmosphere-atlas::after { background: linear-gradient(90deg, rgb(251 252 255 / .22), rgb(251 252 255 / .88) 24%, #fbfcff 49%, rgb(251 252 255 / .88) 76%, rgb(251 252 255 / .22)); }
+  .atmosphere-atlas-svg { opacity: .73; }
+  .atmosphere-paper-svg { opacity: .8; }
+  .section-atmosphere-orbit::after { background: linear-gradient(90deg, rgb(18 39 81 / .77), rgb(21 45 94 / .6) 44%, rgb(24 54 123 / .1)); }
+  .atmosphere-orbit-svg { width: 1350px; height: 870px; right: -420px; opacity: .8; }
+  .atmosphere-converge-svg { opacity: .9; }
+}
+
+@media (max-width: 600px) {
+  .atmosphere-atlas-svg { opacity: .7; }
+  .section-atmosphere-path::after { background: linear-gradient(180deg, #fbfcff, rgb(251 252 255 / .62) 45%, rgb(251 252 255 / .12)); }
+  .atmosphere-path-svg { opacity: .68; }
+  .atmosphere-orbit-svg { width: 1120px; height: 800px; right: -520px; opacity: .64; }
+  .section-atmosphere-orbit::after { background: linear-gradient(180deg, rgb(18 39 81 / .71), rgb(21 45 94 / .36) 62%, rgb(24 54 123 / .18)); }
+  .atmosphere-paper-svg { opacity: .65; }
+  .section-atmosphere-paper::after { background: linear-gradient(90deg, rgb(249 251 255 / .3), rgb(249 251 255 / .88) 21%, #f9fbff 52%, rgb(249 251 255 / .6) 84%, transparent); }
+  .atmosphere-converge-svg { opacity: .72; }
+  .section-atmosphere-converge::after { background: linear-gradient(90deg, rgb(17 30 54 / .89), rgb(17 30 54 / .64) 52%, rgb(17 30 54 / .08)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-atmosphere [class*="atmosphere-"] { animation: none !important; }
+  .atmosphere-signal { stroke-dasharray: .045 .955; stroke-dashoffset: -.42; }
+}
