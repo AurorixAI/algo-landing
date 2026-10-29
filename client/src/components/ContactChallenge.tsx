@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "@/i18n";
+import { TURNSTILE_SITE_KEY } from "@/lib/config";
 
 interface TurnstileAPI {
   ready(callback:()=>void):void;
@@ -26,15 +26,10 @@ function loadChallenge():Promise<TurnstileAPI> {
   });
   return scriptPromise;
 }
-const copy={
-  ru:{label:"Проверка перед отправкой",loading:"Подготавливаем проверку…",failed:"Проверка недоступна. Проверьте соединение и повторите.",expired:"Время проверки истекло. Пройдите её ещё раз.",retry:"Повторить проверку"},
-  uz:{label:"Yuborishdan oldingi tekshiruv",loading:"Tekshiruv tayyorlanmoqda…",failed:"Tekshiruv mavjud emas. Aloqani tekshirib, qayta urinib ko‘ring.",expired:"Tekshiruv vaqti tugadi. Uni qayta bajaring.",retry:"Tekshiruvni takrorlash"},
-  en:{label:"Check before sending",loading:"Preparing verification…",failed:"Verification is unavailable. Check your connection and retry.",expired:"Verification expired. Please try it again.",retry:"Retry verification"},
-};
-export const challengeSiteKey=(import.meta.env.VITE_TURNSTILE_SITE_KEY||"").trim();
+const copy={label:"Проверка перед отправкой",loading:"Подготавливаем проверку…",failed:"Проверка недоступна. Проверьте соединение и повторите.",expired:"Время проверки истекло. Пройдите её ещё раз.",retry:"Повторить проверку"};
+export const challengeSiteKey=TURNSTILE_SITE_KEY;
 export default function ContactChallenge({onToken,reset}:{onToken:(token:string)=>void;reset:number}) {
-  const {locale}=useTranslation();
-  const c=copy[locale];
+  const c=copy;
   const container=useRef<HTMLDivElement>(null);
   const callback=useRef(onToken);
   callback.current=onToken;
@@ -48,7 +43,7 @@ export default function ContactChallenge({onToken,reset}:{onToken:(token:string)
     loadChallenge().then(loaded=>{
       if(disposed||!container.current)return;
       api=loaded;
-      widget=api.render(container.current,{sitekey:challengeSiteKey,action:"contact",theme:"light",size:"flexible",language:locale==="uz"?"auto":locale,"response-field":false,
+      widget=api.render(container.current,{sitekey:challengeSiteKey,action:"demo_request",theme:"light",size:"flexible",language:"ru","response-field":false,
         callback:(token:string)=>{if(!disposed){callback.current(token);setState("ready");}},
         "expired-callback":()=>{if(!disposed){callback.current("");setState("expired");}},
         "error-callback":()=>{if(!disposed){callback.current("");setState("failed");}return true;},
@@ -56,6 +51,6 @@ export default function ContactChallenge({onToken,reset}:{onToken:(token:string)
       setState("ready");
     }).catch(()=>{if(!disposed)setState("failed");});
     return()=>{disposed=true;if(widget!==undefined)api?.remove(widget);};
-  },[locale,reset,attempt]);
+  },[reset,attempt]);
   return <div className="contact-challenge" aria-label={c.label}><div ref={container}/>{state==="loading"&&<p role="status">{c.loading}</p>}{(state==="failed"||state==="expired")&&<div role="alert"><p>{state==="expired"?c.expired:c.failed}</p><button type="button" onClick={()=>setAttempt(value=>value+1)}>{c.retry}</button></div>}</div>;
 }

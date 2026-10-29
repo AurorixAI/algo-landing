@@ -14,6 +14,7 @@ import "@/components/section-system.css";
 import { ApproachSection, FutureSection } from "@/components/VisionSections";
 import { landingCopy } from "./landing-copy";
 import { completeEntryScroll } from "./entry-scroll";
+import { LOGIN_URL } from "./lib/config";
 
 const ExamChapter = lazy(() => import("@/components/ExamChapter"));
 const DiagnosticChapter = lazy(() => import("@/components/DiagnosticChapter"));
@@ -34,7 +35,7 @@ function SectionBackdrop({ variant }: { variant: "atlas" | "path" | "orbit" | "p
 function DemoButton({ children, className = "", light = false }: { children?: ReactNode; className?: string; light?: boolean }) {
   const { locale } = useTranslation();
   const { open } = useContactForm();
-  return <button className={`button ${light ? "button-white" : "button-blue"} ${className}`} onClick={() => open("demo")}><span>{children || landingCopy[locale].demo}</span><ArrowUpRight size={18} aria-hidden="true" /></button>;
+  return <button className={`button ${light ? "button-white" : "button-blue"} ${className}`} onClick={() => open()}><span>{children || landingCopy[locale].demo}</span><ArrowUpRight size={18} aria-hidden="true" /></button>;
 }
 
 function Hero() {
@@ -63,7 +64,7 @@ function Footer() {
   const { locale } = useTranslation();
   const c = landingCopy[locale];
   const { open } = useContactForm();
-  return <footer className="site-footer"><div className="shell"><div className="footer-top"><div className="footer-brand"><Brand /><p>{c.footerText}</p></div><div className="footer-links"><span className="mono">{c.footerProduct}</span>{siteLinks(locale).map(link => <a key={link.id} href={`#${link.id}`}>{link.label}</a>)}</div><div className="footer-links"><span className="mono">{c.footerContact}</span><button onClick={() => open("demo")}>{c.demo}<ArrowUpRight size={14} /></button><button onClick={() => open("pitchDeck")}>{c.footerPartner}<ArrowUpRight size={14} /></button><a href="https://algolab.me/login">{c.login}<ArrowUpRight size={14} /></a></div></div><div className="footer-bottom"><span>{c.footerRights}</span><span className="footer-signature mono">EDUCATION, CONNECTED.</span><a href="#top">{c.backTop}<ArrowUpRight size={14} /></a></div></div></footer>;
+  return <footer className="site-footer"><div className="shell"><div className="footer-top"><div className="footer-brand"><Brand /><p>{c.footerText}</p></div><div className="footer-links"><span className="mono">{c.footerProduct}</span>{siteLinks(locale).map(link => <a key={link.id} href={`#${link.id}`}>{link.label}</a>)}</div><div className="footer-links"><span className="mono">{c.footerContact}</span><button onClick={() => open()}>{c.demo}<ArrowUpRight size={14} /></button><a href={LOGIN_URL}>{c.login}<ArrowUpRight size={14} /></a></div></div><div className="footer-bottom"><span>{c.footerRights}</span><span className="footer-signature mono">EDUCATION, CONNECTED.</span><a href="#top">{c.backTop}<ArrowUpRight size={14} /></a></div></div></footer>;
 }
 
 function ProductChapters() {

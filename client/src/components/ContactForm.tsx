@@ -1,120 +1,97 @@
-import { createContext, useContext, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, Check, CheckCircle2, CircleAlert, Loader2, X } from "lucide-react";
-import { useTranslation } from "@/i18n";
-import "./contact-form.css";
 import ContactChallenge, { challengeSiteKey } from "./ContactChallenge";
-
-type ContactType = "demo" | "pitchDeck" | "connect";
-type SubmissionStatus = "idle" | "submitting" | "success" | "preview" | "error";
+import {
+  EMPTY_APPLY_FORM,
+  NEEDS,
+  ORG_TYPES,
+  POSITIONS,
+  STEP_TITLES,
+  TOOLS,
+  buildCreateBody,
+  buildDetailsBody,
+  describeFailure,
+  firstErrorField,
+  firstStepWithErrors,
+  validateStep,
+  type ApplyErrors,
+  type ApplyField,
+  type ApplyValues,
+  type FailureView,
+  type Step,
+} from "@/lib/demo-apply";
+import { ApiFailure, createDemoRequest, patchDemoRequest, uuid4 } from "@/lib/demo-api";
+import { clearDraft, loadDraft, rememberSource, saveDraft, type Draft } from "@/lib/demo-draft";
+import { COMMENT_MAX, SUCCESS_STEPS, STUDENTS_MAX, maskPhone, type DemoSource } from "@/lib/demo-form";
+import { enterForm, leaveForm, wantsForm } from "@/lib/demo-history";
+import "./contact-form.css";
 
 interface ContactFormContextType {
-  open: (type: ContactType, context?: string) => void;
+  /** Opens the one request form.  `context` is what the button was about: it goes into the comment. */
+  open: (context?: string) => void;
 }
 
 const ContactFormContext = createContext<ContactFormContextType>({ open: () => {} });
 export const useContactForm = () => useContext(ContactFormContext);
 
-const copy = {
-  ru: {
-    eyebrow: "ДАВАЙТЕ ПОЗНАКОМИМСЯ",
-    title: "ALGO в работе.\nНа вашем примере.",
-    description: "Покажем путь от диагностики до работы преподавателя и обсудим задачи вашего центра.",
-    steps: ["Диагностика знаний", "Понятный результат", "Работа преподавателя"],
-    demo: "Посмотреть ALGO",
-    connect: "Обсудить подключение",
-    pitchDeck: "Запросить презентацию",
-    formDescription: "Оставьте контакты и пару слов о себе. Так мы сможем подготовить полезный разговор.",
-    optional: "необязательно",
-    messagePlaceholder: "Ваш центр, роль или задача, которую хотите обсудить…",
-    submit: "Отправить заявку",
-    privacy: "Используем ваши контакты, чтобы ответить на этот запрос.",
-    successTitle: "Заявка отправлена",
-    successDescription: "Ваш запрос передан команде ALGO. Ответим на указанный email.",
-    previewTitle: "Отправка пока недоступна",
-    previewDescription: "Приём заявок временно недоступен. Ваше сообщение не отправлено команде ALGO. Попробуйте позже.",
-    back: "Вернуться к форме",
-    error: "Не удалось отправить заявку. Проверьте соединение и попробуйте ещё раз.",
-    nameError: "Укажите ваше имя.",
-    limited: "Слишком много попыток. Подождите несколько минут перед повторной отправкой.",
-    verification: "Подтвердите проверку перед отправкой. Если она недоступна, попробуйте позже.",
-    collaborationTitle: "Начнём\nс разговора.",
-    collaborationDescription: "Расскажите, что вас интересует в ALGO. Обсудим продукт и подходящий формат сотрудничества.",
-    collaborationSteps: ["Продукт и возможности", "Задачи вашей команды", "Следующий шаг вместе"],
-  },
-  en: {
-    eyebrow: "LET’S GET ACQUAINTED",
-    title: "ALGO in action.\nFor your team.",
-    description: "Explore the journey from assessment to a teacher’s daily work, with your centre’s needs in mind.",
-    steps: ["Knowledge assessment", "Clear results", "A teacher’s workflow"],
-    demo: "Explore ALGO",
-    connect: "Discuss getting started",
-    pitchDeck: "Request a presentation",
-    formDescription: "Leave your details and a little context so we can prepare a useful conversation.",
-    optional: "optional",
-    messagePlaceholder: "Your centre, role, or a question you’d like to discuss…",
-    submit: "Send request",
-    privacy: "We use your contact details to respond to this request.",
-    successTitle: "Request sent",
-    successDescription: "Your request has been sent to the ALGO team. We’ll reply to the email you provided.",
-    previewTitle: "Sending is not available yet",
-    previewDescription: "Requests are temporarily unavailable. Your message has not been sent to the ALGO team. Please try again later.",
-    back: "Back to the form",
-    error: "We couldn’t send your request. Check your connection and try again.",
-    nameError: "Please enter your name.",
-    limited: "Too many attempts. Please wait a few minutes before trying again.",
-    verification: "Complete the verification before sending. If it is unavailable, try again later.",
-    collaborationTitle: "It starts with\na conversation.",
-    collaborationDescription: "Tell us what interests you about ALGO. Let’s discuss the product and how we could work together.",
-    collaborationSteps: ["Product and capabilities", "Your team’s needs", "A next step together"],
-  },
-  uz: {
-    eyebrow: "KELING, TANISHAMIZ",
-    title: "ALGO amalda.\nSizning misolingizda.",
-    description: "Diagnostikadan o‘qituvchining kundalik ishigacha bo‘lgan jarayonni ko‘rsatamiz va markazingiz ehtiyojlarini muhokama qilamiz.",
-    steps: ["Bilim diagnostikasi", "Tushunarli natija", "O‘qituvchining ish jarayoni"],
-    demo: "ALGO bilan tanishish",
-    connect: "Ulanishni muhokama qilish",
-    pitchDeck: "Taqdimot so‘rash",
-    formDescription: "Kontaktlaringizni va o‘zingiz haqingizda qisqacha ma’lumot qoldiring. Bu suhbatga tayyorlanishimizga yordam beradi.",
-    optional: "ixtiyoriy",
-    messagePlaceholder: "Markazingiz, rolingiz yoki muhokama qilmoqchi bo‘lgan masalangiz…",
-    submit: "So‘rov yuborish",
-    privacy: "Kontaktlaringizdan ushbu so‘rovga javob berish uchun foydalanamiz.",
-    successTitle: "So‘rov yuborildi",
-    successDescription: "So‘rovingiz ALGO jamoasiga yuborildi. Ko‘rsatgan emailingizga javob beramiz.",
-    previewTitle: "Yuborish hali mavjud emas",
-    previewDescription: "So‘rovlarni qabul qilish vaqtincha mavjud emas. Xabaringiz ALGO jamoasiga yuborilmadi. Keyinroq qayta urinib ko‘ring.",
-    back: "Shaklga qaytish",
-    error: "So‘rov yuborilmadi. Internet aloqasini tekshiring va qayta urinib ko‘ring.",
-    nameError: "Ismingizni kiriting.",
-    limited: "Urinishlar juda ko‘p. Qayta yuborishdan oldin bir necha daqiqa kuting.",
-    verification: "Yuborishdan oldin tekshiruvni bajaring. U mavjud bo‘lmasa, keyinroq urinib ko‘ring.",
-    collaborationTitle: "Hammasi\nsuhbatdan boshlanadi.",
-    collaborationDescription: "ALGO haqida sizni nima qiziqtirishini ayting. Mahsulot va hamkorlik imkoniyatlarini muhokama qilamiz.",
-    collaborationSteps: ["Mahsulot imkoniyatlari", "Jamoangiz ehtiyojlari", "Birgalikdagi keyingi qadam"],
-  },
-};
+const storage = (() => {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return undefined;
+  }
+})();
 
 export function ContactFormProvider({ children }: { children: ReactNode }) {
-  const [contactType, setContactType] = useState<ContactType | null>(null);
+  const [isOpen, setOpen] = useState(false);
   const [context, setContext] = useState("");
+  // "restore": the window comes back after a reload / a direct #demo link, so a finished request stays on screen.
+  const [restore, setRestore] = useState(false);
   const returnFocus = useRef<HTMLElement | null>(null);
+  const source = useRef<DemoSource | null>(null);
+  if (source.current === null) {
+    source.current = rememberSource(storage, {
+      search: window.location.search,
+      pathname: window.location.pathname,
+      referrer: document.referrer,
+      host: window.location.host,
+    });
+  }
 
-  const open = (type: ContactType, initialContext = "") => {
+  const open = useCallback((text = "") => {
     returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    setContactType(type);
-    setContext(initialContext);
-  };
+    setContext(text);
+    setRestore(false);
+    enterForm(window);
+    setOpen(true);
+  }, []);
+  const close = useCallback(() => {
+    setOpen(false);
+    leaveForm(window);
+  }, []);
+
+  useEffect(() => {
+    if (wantsForm(window)) {
+      setRestore(true);
+      enterForm(window);
+      setOpen(true);
+    }
+    // «Назад» on a phone: the address no longer has #demo -> the window closes, the draft stays.
+    const onPop = () => setOpen(wantsForm(window));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   return (
     <ContactFormContext.Provider value={{ open }}>
       {children}
-      {contactType && (
+      {isOpen && (
         <ContactDialog
-          type={contactType}
-          initialContext={context}
-          onClose={() => setContactType(null)}
+          context={context}
+          restore={restore}
+          source={source.current ?? undefined}
+          onClose={close}
           returnFocus={returnFocus.current}
         />
       )}
@@ -122,108 +99,267 @@ export function ContactFormProvider({ children }: { children: ReactNode }) {
   );
 }
 
-function ContactDialog({ type, initialContext, onClose, returnFocus }: {
-  type: ContactType;
-  initialContext: string;
+// ---- Copy (Russian only, K3 L5) -------------------------------------------------------------------------------------
+
+const COPY = {
+  eyebrow: "ДАВАЙТЕ ПОЗНАКОМИМСЯ",
+  title: "ALGO в работе.\nНа вашем примере.",
+  description: "Покажем путь от диагностики до работы преподавателя и обсудим задачи вашего центра.",
+  close: "Закрыть",
+  optional: "необязательно",
+  heads: {
+    1: { title: "О вашем центре", text: "Начнём с общего: так демо будет ближе к вашей работе." },
+    2: { title: "Как с вами связаться", text: "После этого шага заявка уходит команде ALGO. Менеджер свяжется с вами в течение 1 рабочего дня." },
+    3: { title: "Расскажите о задачах", text: "Заявка уже принята. Ответы необязательны, но помогут подготовить демо." },
+  },
+  done: { title: "Заявка принята", text: "Спасибо! Заявка отправлена команде ALGO." },
+  privacy: "Используем ваши контакты, чтобы ответить на эту заявку.",
+  waitCheck: "Дождитесь окончания проверки ниже и нажмите ещё раз.",
+  stepNoteDone: "Заявка уже принята. Дополнение необязательно: расскажете и на звонке.",
+  notAdded: "Заявка принята, но дополнить её не получилось. Расскажите о задачах менеджеру на звонке.",
+} as const;
+
+// ---- Dialog ---------------------------------------------------------------------------------------------------------
+
+function freshDraft(): Draft {
+  return { step: 1, values: { ...EMPTY_APPLY_FORM, needs: [] }, requestId: uuid4(), created: null, context: "", notice: "" };
+}
+
+function startDraft(context: string, restore: boolean): Draft {
+  let draft = loadDraft(storage);
+  if (draft?.step === "done" && !restore) draft = null; // a new request: the old one is finished
+  if (!draft) draft = freshDraft();
+  // A chapter's button says what the visitor looked at: it becomes the comment unless the visitor wrote their own.
+  if (context && draft.step !== "done" && (draft.values.comment === "" || draft.values.comment === draft.context)) {
+    draft = { ...draft, context, values: { ...draft.values, comment: context } };
+  }
+  return draft;
+}
+
+function ContactDialog({ context, restore, source, onClose, returnFocus }: {
+  context: string;
+  restore: boolean;
+  source: DemoSource | undefined;
   onClose: () => void;
   returnFocus: HTMLElement | null;
 }) {
-  const { t, locale } = useTranslation();
-  const content = copy[locale];
   const id = useId();
-  const [status, setStatus] = useState<SubmissionStatus>("idle");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState(initialContext);
-  const [website, setWebsite] = useState("");
-  const [turnstileToken, setTurnstileToken] = useState("");
+  const [draft, setDraft] = useState<Draft>(() => startDraft(context, restore));
+  const draftRef = useRef(draft);
+  const mounted = useRef(true);
+  const busy = useRef(false); // one request at a time: a double click or Enter must not send twice
+  const [sending, setSending] = useState(false);
+  const [errors, setErrors] = useState<ApplyErrors>({});
+  const [banner, setBanner] = useState<FailureView | { kind: "info"; message: string } | null>(null);
+  const [token, setToken] = useState("");
   const [challengeReset, setChallengeReset] = useState(0);
-  const [errorKind, setErrorKind] = useState<"error" | "limited" | "verification">("error");
-  const request = useRef<AbortController | null>(null);
-  const nameInput = useRef<HTMLInputElement>(null);
-  const isComplete = status === "success" || status === "preview";
-  const isCollaboration = type === "pitchDeck";
+  const content = useRef<HTMLDivElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const { step, values } = draft;
 
-  useEffect(() => () => request.current?.abort(), []);
+  /** Every change goes to the draft in sessionStorage, even if the window was closed while a request was in flight. */
+  const commit = useCallback((update: (d: Draft) => Draft) => {
+    const next = update(draftRef.current);
+    draftRef.current = next;
+    // Once finished, nothing personal stays in the tab; the screen is still restored after a reload.
+    saveDraft(storage, next.step === "done" ? { ...next, values: { ...EMPTY_APPLY_FORM, needs: [] }, created: null } : next);
+    if (mounted.current) setDraft(next);
+  }, []);
+
+  useEffect(() => {
+    mounted.current = true;
+    commit((d) => d); // a restored or fresh draft is stored at once (the request id must survive a reload)
+    return () => { mounted.current = false; };
+  }, [commit]);
+
+  // Phone: the sheet follows the visible part of the screen, so the keyboard never covers the focused field or the button.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const node = content.current;
+    if (!viewport || !node) return;
+    const apply = () => {
+      node.style.setProperty("--vv-height", `${Math.round(viewport.height)}px`);
+      node.style.setProperty("--vv-top", `${Math.round(viewport.offsetTop)}px`);
+    };
+    const reveal = () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && node.contains(active) && active.matches("input, textarea, select")) {
+        active.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+      }
+    };
+    const onResize = () => { apply(); reveal(); };
+    const onFocus = () => window.setTimeout(reveal, 280); // after the keyboard has finished opening
+    apply();
+    viewport.addEventListener("resize", onResize);
+    viewport.addEventListener("scroll", apply);
+    node.addEventListener("focusin", onFocus);
+    return () => {
+      viewport.removeEventListener("resize", onResize);
+      viewport.removeEventListener("scroll", apply);
+      node.removeEventListener("focusin", onFocus);
+    };
+  }, []);
+
+  const goTo = (next: Step) => {
+    setBanner(null);
+    commit((d) => ({ ...d, step: next }));
+    window.requestAnimationFrame(() => {
+      content.current?.querySelector(".contact-scroll")?.scrollTo({ top: 0 });
+      heading.current?.focus({ preventScroll: true });
+    });
+  };
+
+  const setField = <K extends keyof ApplyValues>(key: K, value: ApplyValues[K]) => {
+    commit((d) => ({ ...d, values: { ...d.values, [key]: value } }));
+    if (key in errors) setErrors((e) => ({ ...e, [key]: undefined }));
+    if (banner?.kind === "fields") setBanner(null);
+  };
+
+  const focusField = (field: ApplyField | undefined) => {
+    if (!field) return;
+    window.requestAnimationFrame(() => {
+      const element = content.current?.querySelector<HTMLElement>(`[data-field="${field}"]`);
+      element?.focus();
+      element?.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+    });
+  };
+
+  const showFailure = (view: FailureView, current: Step) => {
+    const target = view.step ?? current;
+    if (target !== current) goTo(target); // clears the banner: so it is set after
+    setErrors(view.errors);
+    setBanner(view);
+    focusField(firstErrorField(target, view.errors));
+  };
+
+  const finish = (notice = "") => {
+    setErrors({});
+    setBanner(null);
+    commit((d) => ({ ...d, step: "done", notice, created: null, values: { ...EMPTY_APPLY_FORM, needs: [] } }));
+    window.requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
+  };
 
   const handleClose = () => {
-    request.current?.abort();
+    if (draftRef.current.step === "done") clearDraft(storage);
     onClose();
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (status === "submitting" || request.current) return;
-    if (!name.trim()) {
-      nameInput.current?.setCustomValidity(content.nameError);
-      nameInput.current?.reportValidity();
-      return;
-    }
+  // ---- Step actions ----
 
-    if (challengeSiteKey && !turnstileToken) { setErrorKind("verification"); setStatus("error"); return; }
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 20000);
-    request.current = controller;
-    setStatus("submitting");
+  const next = () => {
+    const found = validateStep(1, draftRef.current.values);
+    setErrors(found);
+    if (Object.keys(found).length) { focusField(firstErrorField(1, found)); return; }
+    goTo(2);
+  };
 
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), message: message.trim(), type, website, turnstileToken }),
-        signal: controller.signal,
-      });
-      const result: { ok?: boolean; error?: string } = await response.json();
-      if (controller.signal.aborted) return;
-      if (result.error === "delivery_unavailable") { setStatus("preview"); return; }
-      if (!response.ok || result.ok !== true) {
-        setErrorKind(response.status === 429 ? "limited" : result.error?.startsWith("verification_") ? "verification" : "error");
-        setStatus("error");
-        setChallengeReset(value => value + 1);
+  const create = async () => {
+    if (busy.current) return;
+    const current = draftRef.current;
+    for (const check of [1, 2] as const) {
+      const found = validateStep(check, current.values);
+      if (Object.keys(found).length) {
+        setErrors(found);
+        if (check !== 2) goTo(check);
+        focusField(firstErrorField(check, found));
         return;
       }
-      setStatus("success");
-      setName("");
-      setEmail("");
-      setMessage("");
-    } catch {
-      if (request.current === controller) { setErrorKind("error"); setStatus("error"); setChallengeReset(value => value + 1); }
+    }
+    if (challengeSiteKey && !token) { setBanner({ kind: "info", message: COPY.waitCheck }); return; }
+    busy.current = true;
+    setSending(true);
+    setErrors({});
+    setBanner(null);
+    try {
+      const created = await createDemoRequest(buildCreateBody(current.values, source, current.requestId, token));
+      commit((d) => ({
+        ...d,
+        requestId: created.requestId,
+        created: { id: created.id, token: created.detailsToken, expiresAt: created.detailsTokenExpiresAt },
+      }));
+      if (created.detailsToken) goTo(3);
+      else finish(); // an old request that came back again: nothing can be added to it
+    } catch (error) {
+      setToken("");
+      setChallengeReset((value) => value + 1); // a Turnstile token works once
+      if (mounted.current) showFailure(describeFailure(error, 2), 2);
     } finally {
-      clearTimeout(timeout);
-      if (request.current === controller) request.current = null;
+      busy.current = false;
+      if (mounted.current) setSending(false);
     }
   };
 
-  const heading = status === "success" ? content.successTitle : status === "preview" ? content.previewTitle : content[type];
-  const description = status === "success" ? content.successDescription : status === "preview" ? content.previewDescription : content.formDescription;
+  const addDetails = async () => {
+    if (busy.current) return;
+    const current = draftRef.current;
+    const found = validateStep(3, current.values);
+    setErrors(found);
+    if (Object.keys(found).length) { focusField(firstErrorField(3, found)); return; }
+    const created = current.created;
+    const body = created?.token ? buildDetailsBody(current.values, created.token) : null;
+    if (!created || !body) { finish(); return; } // nothing to add
+    busy.current = true;
+    setSending(true);
+    setBanner(null);
+    try {
+      await patchDemoRequest(created.id, body);
+      finish();
+    } catch (error) {
+      if (error instanceof ApiFailure && [403, 404, 409].includes(error.status)) {
+        finish(COPY.notAdded); // the request itself was accepted at step 2
+      } else if (mounted.current) {
+        showFailure(describeFailure(error, 3), 3);
+      }
+    } finally {
+      busy.current = false;
+      if (mounted.current) setSending(false);
+    }
+  };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (step === 1) next();
+    else if (step === 2) void create();
+    else if (step === 3) void addDetails();
+  };
+
+  const isDone = step === "done";
+  const head = isDone ? COPY.done : COPY.heads[step];
+  const field = (name: ApplyField) => ({
+    "data-field": name,
+    "aria-invalid": errors[name] ? true : undefined,
+    "aria-describedby": errors[name] ? `${id}-${name}-error` : undefined,
+  });
 
   return (
     <Dialog.Root open onOpenChange={(open) => { if (!open) handleClose(); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="contact-overlay" />
         <Dialog.Content
+          ref={content}
           className="contact-dialog"
+          onOpenAutoFocus={(event) => { event.preventDefault(); heading.current?.focus({ preventScroll: true }); }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             if (returnFocus?.isConnected) returnFocus.focus({ preventScroll: true });
           }}
         >
-          <Dialog.Close className="contact-close" aria-label={t.contact.close}>
+          <Dialog.Close className="contact-close" aria-label={COPY.close}>
             <X size={19} aria-hidden="true" />
           </Dialog.Close>
 
           <aside className="contact-story" aria-hidden="true">
             <span className="contact-wordmark">ALGO</span>
             <div className="contact-story-body">
-              <p className="contact-eyebrow">{content.eyebrow}</p>
-              <h2>{isCollaboration ? content.collaborationTitle : content.title}</h2>
-              <p className="contact-story-description">{isCollaboration ? content.collaborationDescription : content.description}</p>
+              <p className="contact-eyebrow">{COPY.eyebrow}</p>
+              <h2>{COPY.title}</h2>
+              <p className="contact-story-description">{COPY.description}</p>
             </div>
             <div className="contact-journey">
-              {(isCollaboration ? content.collaborationSteps : content.steps).map((step, index) => (
-                <div className="contact-journey-step" key={step}>
-                  <span className="contact-step-number">0{index + 1}</span>
-                  <span>{step}</span>
+              {([1, 2, 3] as const).map((n) => (
+                <div className="contact-journey-step" key={n} data-state={isDone || n < step ? "done" : n === step ? "current" : "todo"}>
+                  <span className="contact-step-number">0{n}</span>
+                  <span>{STEP_TITLES[n]}</span>
                   <Check size={13} />
                 </div>
               ))}
@@ -231,92 +367,179 @@ function ContactDialog({ type, initialContext, onClose, returnFocus }: {
             <span className="contact-story-footer">ALGO · EDTECH</span>
           </aside>
 
-          <div className={`contact-main${isComplete ? " contact-main-complete" : ""}`}>
-            {isComplete && (
-              <span className={`contact-state-icon${status === "preview" ? " contact-state-preview" : ""}`}>
-                {status === "success" ? <CheckCircle2 size={30} aria-hidden="true" /> : <CircleAlert size={30} aria-hidden="true" />}
-              </span>
-            )}
-            <div className="contact-form-heading" role={isComplete ? "status" : undefined}>
-              {!isComplete && <span className="contact-section-label">{t.contact.typeLabel}</span>}
-              <Dialog.Title className="contact-title">{heading}</Dialog.Title>
-              <Dialog.Description className="contact-description">{description}</Dialog.Description>
+          <div className="contact-main">
+            <div className="contact-head">
+              {isDone ? (
+                <span className="contact-state-icon"><CheckCircle2 size={30} aria-hidden="true" /></span>
+              ) : (
+                <div className="contact-steps" role="progressbar" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} aria-label={`Шаг ${step} из 3`}>
+                  <span className="contact-steps-label">Шаг {step} из 3 · {STEP_TITLES[step]}</span>
+                  <span className="contact-steps-bar" aria-hidden="true">
+                    {([1, 2, 3] as const).map((n) => <i key={n} data-on={n <= step ? "1" : "0"} />)}
+                  </span>
+                </div>
+              )}
+              <Dialog.Title className="contact-title" ref={heading} tabIndex={-1}>{head.title}</Dialog.Title>
+              <Dialog.Description className="contact-description">{head.text}</Dialog.Description>
             </div>
 
-            {isComplete ? (
-              <button
-                className="contact-submit contact-complete-button"
-                type="button"
-                onClick={status === "success" ? handleClose : () => { setStatus("idle"); setChallengeReset(value => value + 1); }}
-              >
-                {status === "success" ? t.contact.close : content.back}
-                <ArrowRight size={17} aria-hidden="true" />
-              </button>
+            {isDone ? (
+              <div className="contact-done" role="status">
+                <ol className="contact-next">
+                  {SUCCESS_STEPS.map((text, index) => <li key={text}><span>{index + 1}</span>{text}</li>)}
+                </ol>
+                {draft.notice && <p className="contact-notice"><CircleAlert size={16} aria-hidden="true" />{draft.notice}</p>}
+                <div className="contact-actions">
+                  <button className="contact-submit" type="button" onClick={handleClose}>{COPY.close}<ArrowRight size={18} aria-hidden="true" /></button>
+                </div>
+              </div>
             ) : (
-              <form onSubmit={handleSubmit} className="contact-form" aria-busy={status === "submitting"}>
-                <div className="contact-honeypot" aria-hidden="true"><label htmlFor={`${id}-website`}>Website</label><input id={`${id}-website`} name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={event => setWebsite(event.target.value)}/></div>
-                <fieldset disabled={status === "submitting"} className="contact-fields">
-                  <div className="contact-field">
-                    <label htmlFor={`${id}-name`}>{t.contact.nameLabel}</label>
-                    <input
-                      ref={nameInput}
-                      id={`${id}-name`}
-                      name="name"
-                      type="text"
-                      autoComplete="name"
-                      value={name}
-                      onChange={(event) => {
-                        event.target.setCustomValidity("");
-                        setName(event.target.value);
-                      }}
-                      placeholder={t.contact.namePlaceholder}
-                      maxLength={200}
-                      required
-                    />
-                  </div>
-                  <div className="contact-field">
-                    <label htmlFor={`${id}-email`}>{t.contact.emailLabel}</label>
-                    <input
-                      id={`${id}-email`}
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      inputMode="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      placeholder="you@company.com"
-                      maxLength={320}
-                      pattern={"[^\\s@]+@[^\\s@]+\\.[^\\s@]+"}
-                      required
-                    />
-                  </div>
-                  <div className="contact-field">
-                    <label htmlFor={`${id}-message`}>{t.contact.messageLabel}<span>{content.optional}</span></label>
-                    <textarea
-                      id={`${id}-message`}
-                      name="message"
-                      value={message}
-                      onChange={(event) => setMessage(event.target.value)}
-                      placeholder={content.messagePlaceholder}
-                      maxLength={2000}
-                      rows={3}
-                    />
-                  </div>
-                </fieldset>
+              <form onSubmit={submit} className="contact-form" aria-busy={sending} noValidate>
+                <div className="contact-honeypot" aria-hidden="true">
+                  <label htmlFor={`${id}-website`}>Website</label>
+                  <input id={`${id}-website`} name="website" type="text" tabIndex={-1} autoComplete="off" value={values.website} onChange={(e) => setField("website", e.target.value)} />
+                </div>
+                <div className="contact-scroll"><fieldset disabled={sending} className="contact-fields">
+                  {step === 1 && (
+                    <>
+                      <Field id={`${id}-centreName`} label="Название центра" error={errors.centreName}>
+                        <input {...field("centreName")} id={`${id}-centreName`} name="organization" type="text" autoComplete="organization" value={values.centreName} maxLength={200} onChange={(e) => setField("centreName", e.target.value)} />
+                      </Field>
+                      <Field id={`${id}-orgType`} label="Тип организации" error={errors.orgType}>
+                        <select {...field("orgType")} id={`${id}-orgType`} name="org_type" value={values.orgType} onChange={(e) => setField("orgType", e.target.value as ApplyValues["orgType"])}>
+                          <option value="">Выберите…</option>
+                          {ORG_TYPES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </Field>
+                      <Field id={`${id}-city`} label="Город" error={errors.city}>
+                        <input {...field("city")} id={`${id}-city`} name="city" type="text" autoComplete="address-level2" value={values.city} maxLength={100} onChange={(e) => setField("city", e.target.value)} />
+                      </Field>
+                      <Field id={`${id}-address`} label="Адрес" optional error={errors.address}>
+                        <input {...field("address")} id={`${id}-address`} name="center_address" type="text" autoComplete="off" value={values.address} maxLength={300} onChange={(e) => setField("address", e.target.value)} />
+                      </Field>
+                      <Field id={`${id}-studentsCount`} label="Сколько учеников (примерно)" optional error={errors.studentsCount}>
+                        <input {...field("studentsCount")} id={`${id}-studentsCount`} name="students_count" type="text" inputMode="numeric" autoComplete="off" value={values.studentsCount} placeholder="Например, 120" onChange={(e) => setField("studentsCount", e.target.value.replace(/\D/g, "").slice(0, String(STUDENTS_MAX).length))} />
+                      </Field>
+                      <Field id={`${id}-branchesCount`} label="Филиалы" optional error={errors.branchesCount} group>
+                        <div className="contact-chips" role="radiogroup" aria-labelledby={`${id}-branchesCount-label`}>
+                          <Chip type="radio" name={`${id}-branches`} checked={values.branchesMode === "none"} onChange={() => setField("branchesMode", "none")} label="Нет" />
+                          <Chip type="radio" name={`${id}-branches`} checked={values.branchesMode === "some"} onChange={() => setField("branchesMode", "some")} label="Есть" />
+                        </div>
+                        {values.branchesMode === "some" && (
+                          <input {...field("branchesCount")} className="contact-branches" aria-label="Сколько филиалов" type="text" inputMode="numeric" autoComplete="off" value={values.branchesCount} placeholder="Сколько филиалов" onChange={(e) => setField("branchesCount", e.target.value.replace(/\D/g, "").slice(0, 3))} />
+                        )}
+                      </Field>
+                    </>
+                  )}
 
-                {challengeSiteKey && <ContactChallenge onToken={setTurnstileToken} reset={challengeReset}/>}
-                {status === "error" && <p className="contact-error" role="alert"><CircleAlert size={16} aria-hidden="true" />{content[errorKind]}</p>}
+                  {step === 2 && (
+                    <>
+                      <Field id={`${id}-fullName`} label="Ваше имя" error={errors.fullName}>
+                        <input {...field("fullName")} id={`${id}-fullName`} name="name" type="text" autoComplete="name" value={values.fullName} maxLength={120} onChange={(e) => setField("fullName", e.target.value)} />
+                      </Field>
+                      <Field id={`${id}-position`} label="Должность" optional error={errors.position}>
+                        <select {...field("position")} id={`${id}-position`} name="position" value={values.position} onChange={(e) => setField("position", e.target.value as ApplyValues["position"])}>
+                          <option value="">Выберите…</option>
+                          {POSITIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </Field>
+                      <Field id={`${id}-phone`} label="Телефон" error={errors.phone}>
+                        <input {...field("phone")} id={`${id}-phone`} name="tel" type="tel" inputMode="tel" autoComplete="tel" value={values.phone} placeholder="+998 90 123 45 67" onChange={(e) => setField("phone", maskPhone(e.target.value))} />
+                      </Field>
+                      <Field id={`${id}-email`} label="Почта" error={errors.email}>
+                        <input {...field("email")} id={`${id}-email`} name="email" type="email" inputMode="email" autoComplete="email" value={values.email} placeholder="name@center.uz" maxLength={254} onChange={(e) => setField("email", e.target.value)} />
+                      </Field>
+                      <Field id={`${id}-contactTime`} label="Удобное время для звонка" optional error={errors.contactTime}>
+                        <input {...field("contactTime")} id={`${id}-contactTime`} name="contact_time" type="text" autoComplete="off" value={values.contactTime} maxLength={100} placeholder="Например, после 15:00" onChange={(e) => setField("contactTime", e.target.value)} />
+                      </Field>
+                      {challengeSiteKey && <ContactChallenge onToken={setToken} reset={challengeReset} />}
+                    </>
+                  )}
 
-                <button type="submit" disabled={status === "submitting" || Boolean(challengeSiteKey && !turnstileToken)} className="contact-submit">
-                  {status === "submitting" ? t.contact.submitting : content.submit}
-                  {status === "submitting" ? <Loader2 className="contact-spinner" size={18} aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
-                </button>
-                <p className="contact-privacy">{content.privacy}</p>
+                  {step === 3 && (
+                    <>
+                      <Field id={`${id}-needs`} label="Что для вас важно" optional error={errors.needs} group>
+                        <div className="contact-chips" role="group" aria-labelledby={`${id}-needs-label`} data-field="needs" tabIndex={-1}>
+                          {NEEDS.map((n) => (
+                            <Chip key={n.value} type="checkbox" name={`${id}-needs`} checked={values.needs.includes(n.value)} label={n.label}
+                              onChange={() => setField("needs", values.needs.includes(n.value) ? values.needs.filter((x) => x !== n.value) : [...values.needs, n.value])} />
+                          ))}
+                        </div>
+                      </Field>
+                      <Field id={`${id}-currentTool`} label="Чем пользуетесь сейчас" optional error={errors.currentTool} group>
+                        <div className="contact-chips" role="radiogroup" aria-labelledby={`${id}-currentTool-label`} data-field="currentTool" tabIndex={-1}>
+                          {TOOLS.map((t) => (
+                            <Chip key={t.value} type="radio" name={`${id}-tool`} checked={values.currentTool === t.value} label={t.label} onChange={() => setField("currentTool", t.value)} />
+                          ))}
+                        </div>
+                      </Field>
+                      <Field id={`${id}-heardFrom`} label="Откуда узнали об ALGO" optional error={errors.heardFrom}>
+                        <input {...field("heardFrom")} id={`${id}-heardFrom`} name="heard_from" type="text" autoComplete="off" value={values.heardFrom} maxLength={200} placeholder="Например, рекомендация коллег" onChange={(e) => setField("heardFrom", e.target.value)} />
+                      </Field>
+                      <Field id={`${id}-comment`} label="Комментарий" optional error={errors.comment}>
+                        <textarea {...field("comment")} id={`${id}-comment`} name="comment" value={values.comment} maxLength={COMMENT_MAX} rows={3} placeholder="Ваш центр, роль или задача, которую хотите обсудить…" onChange={(e) => setField("comment", e.target.value)} />
+                      </Field>
+                    </>
+                  )}
+                </fieldset></div>
+
+                <div className="contact-footer">
+                  {banner && (
+                    <p className={`contact-error${banner.kind === "info" ? " contact-error-info" : ""}`} role="alert">
+                      <CircleAlert size={16} aria-hidden="true" />{banner.message}
+                    </p>
+                  )}
+                  <div className="contact-actions">
+                    {step === 2 && <button type="button" className="contact-secondary" disabled={sending} onClick={() => goTo(1)}>Назад</button>}
+                    {step === 3 && <button type="button" className="contact-secondary" disabled={sending} onClick={() => finish()}>Пропустить</button>}
+                    <button type="submit" className="contact-submit" disabled={sending}>
+                      {sending ? "Отправляем…" : step === 1 ? "Дальше" : step === 2 ? "Отправить заявку" : "Дополнить"}
+                      {sending ? <Loader2 className="contact-spinner" size={18} aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
+                    </button>
+                  </div>
+                  {step === 2 && <p className="contact-privacy">{COPY.privacy}</p>}
+                  {step === 3 && <p className="contact-privacy">{COPY.stepNoteDone}</p>}
+                </div>
               </form>
             )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+function Field({ id, label, optional = false, error, group = false, children }: {
+  id: string;
+  label: string;
+  optional?: boolean;
+  error?: string;
+  /** A group of choices: the label is not tied to one control. */
+  group?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div className="contact-field" data-invalid={error ? "1" : undefined}>
+      {group
+        ? <span className="contact-label" id={`${id}-label`}>{label}{optional && <span>{COPY.optional}</span>}</span>
+        : <label className="contact-label" htmlFor={id}>{label}{optional && <span>{COPY.optional}</span>}</label>}
+      {children}
+      {error && <p className="contact-field-error" id={`${id}-error`}>{error}</p>}
+    </div>
+  );
+}
+
+function Chip({ type, name, checked, label, onChange }: {
+  type: "radio" | "checkbox";
+  name: string;
+  checked: boolean;
+  label: string;
+  onChange: () => void;
+}) {
+  return (
+    <label className="contact-chip" data-checked={checked ? "1" : "0"}>
+      <input type={type} name={name} checked={checked} onChange={onChange} />
+      <span>{label}</span>
+    </label>
   );
 }

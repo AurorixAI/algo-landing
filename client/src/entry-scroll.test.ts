@@ -201,3 +201,14 @@ test("leaving before pageshow does not hold restoration or replay on return", as
   assert.equal(page.y, 2400);
   assert.equal(page.scrolls.length, 1);
 });
+
+test("reload keeps #demo: it is the open request form, not a section to scroll to", async () => {
+  const page = fixture("reload", "https://algo.example/?utm_source=x#demo", 5000);
+  const complete = prepareEntryScroll(page.browser);
+  assert.equal(page.url.href, "https://algo.example/?utm_source=x#demo");
+  assert.equal(page.y, 0);
+  complete(); await page.ready(); page.paint();
+  assert.equal(page.url.hash, "#demo");
+  assert.equal(page.y, 0);
+  assert.equal(page.raw.history.scrollRestoration, "auto");
+});

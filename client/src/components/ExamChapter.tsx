@@ -214,7 +214,7 @@ export default function ExamChapter() {
 
         </div>
       </div>
-      <div className="exam-chapter-bottom"><button className="exam-chapter-cta" type="button" onClick={() => open("demo", c.request)}>{c.cta}<ArrowRight size={14} aria-hidden="true" /></button></div>
+      <div className="exam-chapter-bottom"><button className="exam-chapter-cta" type="button" onClick={() => open(c.request)}>{c.cta}<ArrowRight size={14} aria-hidden="true" /></button></div>
     </div>
   </section>;
 }

@@ -88,7 +88,7 @@ export default function TelegramChapter() {
           })}</div>
           <p className="telegram-access"><ShieldCheck aria-hidden="true" />{c.access}</p>
           <div className="telegram-payment"><div className="telegram-payment-heading"><h3><CreditCard aria-hidden="true" />{c.payment}</h3><span className="telegram-soon">{c.soon}</span></div><p>{c.paymentText}</p></div>
-          <button className="telegram-cta" type="button" onClick={() => open("demo", c.request)}>{c.cta}<ArrowRight aria-hidden="true" /></button>
+          <button className="telegram-cta" type="button" onClick={() => open(c.request)}>{c.cta}<ArrowRight aria-hidden="true" /></button>
         </div>
         <div className="telegram-device" id={`${id}-preview`} ref={preview} tabIndex={-1} aria-label={c.personal[audience]}>
           <div className="telegram-device-inner">

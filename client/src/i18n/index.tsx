@@ -1,16 +1,14 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { translations, type Locale, type Translations } from "./translations";
+export type Locale = "ru" | "en" | "uz";
 
 interface LanguageContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: Translations;
 }
 
 const LanguageContext = createContext<LanguageContextType>({
   locale: "ru",
   setLocale: () => {},
-  t: translations.ru,
 });
 
 function safeGetStorage(key: string): string | null {
@@ -48,7 +46,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [locale]);
 
   return (
-    <LanguageContext.Provider value={{ locale, setLocale, t: translations[locale] }}>
+    <LanguageContext.Provider value={{ locale, setLocale }}>
       {children}
     </LanguageContext.Provider>
   );
@@ -58,4 +56,3 @@ export function useTranslation() {
   return useContext(LanguageContext);
 }
 
-export type { Locale, Translations };

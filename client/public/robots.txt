@@ -2,7 +2,8 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /.netlify/functions/
+
+Sitemap: https://algolab.me/sitemap.xml
 
 # AI training, AI search, and user-directed AI retrieval are not permitted.
 # This is a crawler policy; enforcement against non-compliant bots needs the edge WAF.

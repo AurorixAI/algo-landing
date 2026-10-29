@@ -50,7 +50,7 @@ export default function JourneyPreview({ step, locale }: { step: number; locale:
     <span className="screen-eyebrow mono">{c.label}</span>
     {step === 0 ? <>
       <h3>{c.invitation}</h3>
-      <div className="flow-link"><span className="flow-icon"><Link2 size={19} /></span><div><span>{c.link}</span><code>algolab.me/d/…</code></div></div>
+      <div className="flow-link"><span className="flow-icon"><Link2 size={19} /></span><div><span>{c.link}</span><code>app.algolab.me/d/…</code></div></div>
       <ol className="flow-statuses">{c.statuses.map((status, i) => <li key={status} className={i === 2 ? "current" : i < 2 ? "passed" : ""}><span>{i < 2 ? <Check size={12} /> : i + 1}</span><span>{status}</span>{i === 2 && <i aria-hidden="true" />}</li>)}</ol>
       <p className="flow-note">{c.invitationNote}</p>
     </> : step === 1 ? <>

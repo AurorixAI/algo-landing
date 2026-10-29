@@ -60,7 +60,7 @@ export default function FinanceChapter() {
       <div className="fin-heading"><div><span className="fin-kicker">{c.kicker}</span><h2>{c.title}<br /><span>{c.accent}</span></h2></div><p>{c.intro}</p></div>
       <div className="fin-chapter-tabs" role="group" aria-label={c.kicker}>{c.tabs.map((tab, i) => <button id={i === 0 ? "payments" : "payroll"} key={tab} aria-pressed={chapter === i} aria-controls="fin-demo-panel" onClick={() => selectChapter(i)}>{i === 0 ? <Wallet size={16} aria-hidden="true" /> : <FileSpreadsheet size={16} aria-hidden="true" />}{tab}</button>)}</div>
       <div className="fin-layout">
-        <div className="fin-context"><span className="fin-context-index">0{chapter + 1}</span><h3>{c.titles[chapter]}</h3><p>{c.descriptions[chapter]}</p><button className="fin-cta" onClick={() => open("demo", c.context)}>{c.cta}<ArrowRight size={14} aria-hidden="true" /></button></div>
+        <div className="fin-context"><span className="fin-context-index">0{chapter + 1}</span><h3>{c.titles[chapter]}</h3><p>{c.descriptions[chapter]}</p><button className="fin-cta" onClick={() => open(c.context)}>{c.cta}<ArrowRight size={14} aria-hidden="true" /></button></div>
         <div className="fin-demo" id="fin-demo-panel" key={chapter}>
           <div className="fin-demo-header"><span>{chapter === 0 ? <Wallet size={15} aria-hidden="true" /> : <FileSpreadsheet size={15} aria-hidden="true" />}{chapter === 0 ? c.payment : c.payroll}</span><span>{c.demo}</span></div>
           <div className="fin-demo-body">

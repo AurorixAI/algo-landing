@@ -6,4 +6,6 @@ vite.config.ts.*
 *.tar.gz
 .env
 .env.local
-.vercel.netlify/
+.vercel
+.netlify/
+.env.*.local

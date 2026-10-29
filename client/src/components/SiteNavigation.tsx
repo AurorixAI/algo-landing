@@ -4,6 +4,7 @@ import { ArrowUpRight, BookOpen, ChevronDown, Layers3, Menu, ScanLine, Send, Use
 import { motion, useScroll, useSpring } from "framer-motion";
 import { useTranslation, type Locale } from "@/i18n";
 import { useContactForm } from "./ContactForm";
+import { LOGIN_URL } from "@/lib/config";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { AmbientMotionToggle } from "./AmbientMotion";
 import { landingCopy } from "@/landing-copy";
@@ -40,7 +41,7 @@ export default function SiteNavigation() {
     const update=()=>{
       frame=0;
       setScrolled(window.scrollY>20);
-      const ids=["platform",...moduleIds,...aboutIds,"demo","questions"];
+      const ids=["platform",...moduleIds,...aboutIds,"request-demo","questions"];
       let current="";
       for(const id of ids) {
         const section=document.getElementById(id);
@@ -59,7 +60,7 @@ export default function SiteNavigation() {
   },[]);
   const current=(id:string)=>active===id?"location" as const:undefined;
   const close=()=>{setMenu(false);if(product.current) product.current.open=false;};
-  const demo=()=>{close();open("demo");};
+  const demo=()=>{close();open();};
   return <header className={`site-header${scrolled?" is-scrolled":""}`}>
     <motion.div className="reading-progress" style={{scaleX}} aria-hidden="true"/>
     <div className="shell header-inner"><Brand/>
@@ -68,8 +69,8 @@ export default function SiteNavigation() {
           <div className="site-nav-panel"><a className="site-nav-overview" href="#platform" onClick={close} aria-current={current("platform")}><span>{c.overview}</span><Layers3 size={17} aria-hidden="true"/></a><div className="site-nav-grid">{moduleIds.map((id,i)=>{const Icon=moduleIcons[i];return <a key={id} href={`#${id}`} onClick={close} aria-current={current(id)}><Icon size={18} aria-hidden="true"/><div><strong>{c.modules[i]}</strong><span>{c.descriptions[i]}</span></div></a>;})}</div></div>
         </details>{aboutIds.map((id,i)=><a className="site-nav-link" key={id} href={`#${id}`} aria-current={current(id)}>{c.about[i]}</a>)}
       </nav>
-      <div className="header-actions"><AmbientMotionToggle variant="header"/><LanguageSwitcher/><a className="login-link" href="https://algolab.me/login">{common.login}<ArrowUpRight size={13} aria-hidden="true"/></a><button className="button button-blue header-demo" onClick={demo}>{common.demo}<ArrowUpRight size={15} aria-hidden="true"/></button>
-        <Dialog.Root open={menu} onOpenChange={setMenu}><Dialog.Trigger className="menu-toggle" aria-label={common.menu}><Menu size={22} aria-hidden="true"/></Dialog.Trigger><Dialog.Portal><Dialog.Overlay className="site-menu-layer"/><Dialog.Content className="site-menu-dialog" aria-describedby={undefined}><div className="site-menu-heading"><Dialog.Title>{c.contents}</Dialog.Title><Dialog.Close className="site-menu-close" aria-label={common.close}><X size={21} aria-hidden="true"/></Dialog.Close></div><nav className="site-menu-nav" aria-label={c.label}><a href="#platform" onClick={close} aria-current={current("platform")}>{c.overview}<ArrowUpRight size={17} aria-hidden="true"/></a><span>{c.platform}</span>{moduleIds.map((id,i)=><a className="site-menu-module" key={id} href={`#${id}`} onClick={close} aria-current={current(id)}>{c.modules[i]}<ArrowUpRight size={16} aria-hidden="true"/></a>)}{aboutIds.map((id,i)=><a className={i===0?"site-menu-divider":""} key={id} href={`#${id}`} onClick={close} aria-current={current(id)}>{c.about[i]}<ArrowUpRight size={17} aria-hidden="true"/></a>)}</nav><div className="site-menu-bottom"><a href="https://algolab.me/login">{common.login}<ArrowUpRight size={17} aria-hidden="true"/></a><button className="button button-blue" onClick={demo}>{common.demo}<ArrowUpRight size={18} aria-hidden="true"/></button></div></Dialog.Content></Dialog.Portal></Dialog.Root>
+      <div className="header-actions"><AmbientMotionToggle variant="header"/><LanguageSwitcher/><a className="login-link" href={LOGIN_URL}>{common.login}<ArrowUpRight size={13} aria-hidden="true"/></a><button className="button button-blue header-demo" onClick={demo}>{common.demo}<ArrowUpRight size={15} aria-hidden="true"/></button>
+        <Dialog.Root open={menu} onOpenChange={setMenu}><Dialog.Trigger className="menu-toggle" aria-label={common.menu}><Menu size={22} aria-hidden="true"/></Dialog.Trigger><Dialog.Portal><Dialog.Overlay className="site-menu-layer"/><Dialog.Content className="site-menu-dialog" aria-describedby={undefined}><div className="site-menu-heading"><Dialog.Title>{c.contents}</Dialog.Title><Dialog.Close className="site-menu-close" aria-label={common.close}><X size={21} aria-hidden="true"/></Dialog.Close></div><nav className="site-menu-nav" aria-label={c.label}><a href="#platform" onClick={close} aria-current={current("platform")}>{c.overview}<ArrowUpRight size={17} aria-hidden="true"/></a><span>{c.platform}</span>{moduleIds.map((id,i)=><a className="site-menu-module" key={id} href={`#${id}`} onClick={close} aria-current={current(id)}>{c.modules[i]}<ArrowUpRight size={16} aria-hidden="true"/></a>)}{aboutIds.map((id,i)=><a className={i===0?"site-menu-divider":""} key={id} href={`#${id}`} onClick={close} aria-current={current(id)}>{c.about[i]}<ArrowUpRight size={17} aria-hidden="true"/></a>)}</nav><div className="site-menu-bottom"><a href={LOGIN_URL}>{common.login}<ArrowUpRight size={17} aria-hidden="true"/></a><button className="button button-blue" onClick={demo}>{common.demo}<ArrowUpRight size={18} aria-hidden="true"/></button></div></Dialog.Content></Dialog.Portal></Dialog.Root>
       </div>
     </div>
   </header>;

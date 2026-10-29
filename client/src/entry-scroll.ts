@@ -1,3 +1,6 @@
+/** The only fragment a reload keeps: the request form (client/src/lib/demo-history.ts). */
+const KEEP_ON_RELOAD = "#demo";
+
 /** One owner for document-entry scrolling; ordinary in-page links remain native. */
 export function prepareEntryScroll(browser: Window): () => void {
   const navigation = browser.performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
@@ -18,7 +21,10 @@ export function prepareEntryScroll(browser: Window): () => void {
 
   if (type === "reload") {
     // A fragment from the previous visit is not a new request to open that section.
-    browser.history.replaceState(browser.history.state, "", browser.location.pathname + browser.location.search);
+    // `#demo` is not a section: it is the open request form, which a reload must bring back (K3 L3).
+    if (browser.location.hash !== KEEP_ON_RELOAD) {
+      browser.history.replaceState(browser.history.state, "", browser.location.pathname + browser.location.search);
+    }
     pendingHash = "";
     top();
   }

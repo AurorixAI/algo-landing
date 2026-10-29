@@ -179,7 +179,7 @@ export default function DiagnosticChapter() {
           const Icon = flowIcons[index];
           return <li key={title}><span className="diag-flow-icon"><Icon aria-hidden="true" /></span><div><strong>{title}</strong><p>{c.flowDescriptions[index]}</p></div></li>;
         })}</ol>
-        <button type="button" className="diag-demo-link" onClick={() => open("demo", c.demoContext)}>{c.demo}<ArrowRight aria-hidden="true" /></button>
+        <button type="button" className="diag-demo-link" onClick={() => open(c.demoContext)}>{c.demo}<ArrowRight aria-hidden="true" /></button>
       </div>
       <div className="diag-product">
         <div className="diag-report-top"><span className="diag-report-mark"><Activity aria-hidden="true" /></span><div><h3>{c.report}</h3><p>{c.grade}</p></div><span className="diag-example-tag">{c.example}</span></div>
