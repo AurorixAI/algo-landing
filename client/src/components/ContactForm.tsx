@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type FocusEvent, type FormEvent, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, Check, CheckCircle2, CircleAlert, Loader2, X } from "lucide-react";
 import ContactChallenge, { challengeSiteKey } from "./ContactChallenge";
@@ -151,6 +151,7 @@ function ContactDialog({ context, restore, source, onClose, returnFocus }: {
   const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState<ApplyErrors>({});
   const [banner, setBanner] = useState<FailureView | { kind: "info"; message: string } | null>(null);
+  const [scrolled, setScrolled] = useState(false); // the fields are scrolled under the header: show its lower edge
   const [token, setToken] = useState("");
   const [challengeReset, setChallengeReset] = useState(0);
   const content = useRef<HTMLDivElement>(null);
@@ -323,6 +324,17 @@ function ContactDialog({ context, restore, source, onClose, returnFocus }: {
     else if (step === 3) void addDetails();
   };
 
+  /** A focused field is never left half under the header: its label (the top of `.contact-field`) stays in the visible area. */
+  const keepLabelBelowHeader = (event: FocusEvent<HTMLDivElement>) => {
+    const box = event.currentTarget;
+    const field = (event.target as HTMLElement).closest(".contact-field");
+    if (!field) return;
+    window.requestAnimationFrame(() => {
+      const over = field.getBoundingClientRect().top - box.getBoundingClientRect().top;
+      if (over < 2) box.scrollTop += over - 4;
+    });
+  };
+
   const isDone = step === "done";
   const head = isDone ? COPY.done : COPY.heads[step];
   const field = (name: ApplyField) => ({
@@ -368,7 +380,7 @@ function ContactDialog({ context, restore, source, onClose, returnFocus }: {
           </aside>
 
           <div className="contact-main">
-            <div className="contact-head">
+            <div className="contact-head" data-scrolled={scrolled && !isDone ? "1" : undefined}>
               {isDone ? (
                 <span className="contact-state-icon"><CheckCircle2 size={30} aria-hidden="true" /></span>
               ) : (
@@ -399,7 +411,7 @@ function ContactDialog({ context, restore, source, onClose, returnFocus }: {
                   <label htmlFor={`${id}-website`}>Website</label>
                   <input id={`${id}-website`} name="website" type="text" tabIndex={-1} autoComplete="off" value={values.website} onChange={(e) => setField("website", e.target.value)} />
                 </div>
-                <div className="contact-scroll"><fieldset disabled={sending} className="contact-fields">
+                <div className="contact-scroll" onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 2)} onFocus={keepLabelBelowHeader}><fieldset disabled={sending} className="contact-fields">
                   {step === 1 && (
                     <>
                       <Field id={`${id}-centreName`} label="Название центра" error={errors.centreName}>
