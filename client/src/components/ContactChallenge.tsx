@@ -2,26 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import { TURNSTILE_SITE_KEY } from "@/lib/config";
 
 interface TurnstileAPI {
-  ready(callback:()=>void):void;
   render(container:HTMLElement,options:Record<string,unknown>):string;
   remove(id:string):void;
 }
-declare global { interface Window { turnstile?:TurnstileAPI; } }
+declare global { interface Window { turnstile?:TurnstileAPI; [name:string]:unknown; } }
+const SCRIPT_URL="https://challenges.cloudflare.com/turnstile/v0/api.js";
+const ONLOAD="__algoTurnstileLoaded";
 let scriptPromise:Promise<TurnstileAPI>|undefined;
+/**
+ * The script is loaded once.  Cloudflare calls the global `onload` function when the API is ready to render; `turnstile.ready()`
+ * must NOT be used from `script.onload` (it never fires there: "ready() would break if called before api.js is loaded").
+ * A failed load (network, blocked, 15 s) rejects and forgets the promise, so «Повторить проверку» loads it again.
+ */
 function loadChallenge():Promise<TurnstileAPI> {
-  if(window.turnstile) return Promise.resolve(window.turnstile);
+  if(window.turnstile?.render) return Promise.resolve(window.turnstile);
   if(scriptPromise) return scriptPromise;
   scriptPromise=new Promise((resolve,reject)=>{
     const script=document.createElement("script");
-    script.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    script.async=true;
-    const fail=()=>{clearTimeout(timer);script.remove();scriptPromise=undefined;reject(new Error("challenge_unavailable"));};
+    const fail=()=>{clearTimeout(timer);delete window[ONLOAD];script.remove();scriptPromise=undefined;reject(new Error("challenge_unavailable"));};
     const timer=window.setTimeout(fail,15000);
+    window[ONLOAD]=()=>{clearTimeout(timer);delete window[ONLOAD];if(window.turnstile?.render)resolve(window.turnstile);else fail();};
+    script.src=`${SCRIPT_URL}?render=explicit&onload=${ONLOAD}`;
+    script.async=true;
     script.onerror=fail;
-    script.onload=()=>{
-      if(!window.turnstile){fail();return;}
-      window.turnstile.ready(()=>{clearTimeout(timer);resolve(window.turnstile!);});
-    };
     document.head.appendChild(script);
   });
   return scriptPromise;
