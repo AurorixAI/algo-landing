@@ -109,13 +109,11 @@ const COPY = {
   optional: "необязательно",
   heads: {
     1: { title: "О вашем центре", text: "Начнём с общего: так демо будет ближе к вашей работе." },
-    2: { title: "Как с вами связаться", text: "После этого шага заявка уходит команде ALGO. Менеджер свяжется с вами в течение 1–2 рабочих дней." },
-    3: { title: "Расскажите о задачах", text: "Заявка уже принята. Ответы необязательны, но помогут подготовить демо." },
+    2: { title: "Как с вами связаться", text: "Контакты сохранятся сразу — даже если пропустите последний шаг, мы с вами свяжемся." },
+    3: { title: "Расскажите о задачах", text: "Последний шаг, необязательный. Поможет подготовить демо под ваш центр." },
   },
   done: { title: "Заявка принята", text: "Спасибо! Заявка отправлена команде ALGO." },
-  privacy: "Используем ваши контакты, чтобы ответить на эту заявку.",
   waitCheck: "Дождитесь окончания проверки ниже и нажмите ещё раз.",
-  stepNoteDone: "Заявка уже принята. Дополнение необязательно: расскажете и на звонке.",
   notAdded: "Заявка принята, но дополнить её не получилось. Расскажите о задачах менеджеру на звонке.",
 } as const;
 
@@ -505,12 +503,10 @@ function ContactDialog({ context, restore, source, onClose, returnFocus }: {
                     {step === 2 && <button type="button" className="contact-secondary" disabled={sending} onClick={() => goTo(1)}>Назад</button>}
                     {step === 3 && <button type="button" className="contact-secondary" disabled={sending} onClick={() => finish()}>Пропустить</button>}
                     <button type="submit" className="contact-submit" disabled={sending}>
-                      {sending ? "Отправляем…" : step === 1 ? "Дальше" : step === 2 ? "Отправить заявку" : "Дополнить"}
+                      {sending ? (step === 2 ? "Сохраняем…" : "Отправляем…") : step === 3 ? "Отправить заявку" : "Дальше"}
                       {sending ? <Loader2 className="contact-spinner" size={18} aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
                     </button>
                   </div>
-                  {step === 2 && <p className="contact-privacy">{COPY.privacy}</p>}
-                  {step === 3 && <p className="contact-privacy">{COPY.stepNoteDone}</p>}
                 </div>
               </form>
             )}
